@@ -1,6 +1,6 @@
 #-*- coding:utf-8 -*-
 
-import web, os
+import web, os, time
 from hashlib import sha1
 from xml.sax.saxutils import escape
 from pyweixin import WeiXin as Wx
@@ -19,7 +19,8 @@ TOKEN = 'NEUPIONEER204'
 
 urls = (
     '/(.*)/', 'redirect',
-    '/weixin', 'Weixin'
+    '/weixin', 'Weixin',
+    '/test', 'FuncTest'
 )
 
 app_root = os.path.dirname(__file__)
@@ -29,6 +30,11 @@ render = web.template.render(templates_root)
 class redirect:
     def GET(self, path):
         web.seeother('/' + path)
+
+class FuncTest:
+    def GET(self):
+        from lbsapi import getPOIByCircle
+        return str(getPOIByCircle((41.762150, 123.421822), 2000))
 
 class Weixin:
     def GET(self):
@@ -53,14 +59,14 @@ class Weixin:
                 lng = reqContent['Location_Y']
                 from lbsapi import getPOIByCircle
                 try:
-                    content = getPOIByCircle(center=(lat, lng), radius=2000)
+                    content = getPOIByCircle(center=(lat, lng), radius=1000)
                 except:
                     content = u'error'
             else:
-                content = escape(rawPost)
+                content = rawPost.replace('\n', '')
             return wx.to_xml(from_user_name=reqContent['ToUserName'],
                              to_user_name=reqContent['FromUserName'],
-                             create_time=reqContent['CreateTime'],
+                             create_time=time.time(),
                              msg_type='text',
                              content=content,
                              func_flag=0)
